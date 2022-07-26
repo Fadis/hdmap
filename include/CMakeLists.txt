@@ -1,0 +1,3 @@
+INSTALL( DIRECTORY hdmap/
+	DESTINATION include/hdmap/
+	FILES_MATCHING PATTERN "*.hpp" )
