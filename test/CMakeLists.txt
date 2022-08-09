@@ -89,3 +89,9 @@ target_link_libraries(
 )
 add_test( NAME "hdmap" COMMAND test-hdmap )
 
+add_executable( test-cross cross.cpp )
+target_link_libraries(
+  test-cross
+  Boost::unit_test_framework
+)
+add_test( NAME "cross" COMMAND test-cross )
