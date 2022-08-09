@@ -373,7 +373,25 @@ constexpr auto to_key( unsigned int depth, I ... p ) -> std::enable_if_t< sizeof
   return temp;
 }
 
+template< std::unsigned_integral T, unsigned int dims >
+constexpr auto add_key( T left, T right ) {
+  T temp;
+  set_depth< T, dims >( temp, 0u );
+  for( unsigned int i = 0u; i != dims; ++i ) {
+    set_component< T, dims >( i, temp, get_component< T, dims >( i, left ) + get_component< T, dims >( i, right ) );
+  }
+  return temp;
+}
 
+template< std::unsigned_integral T, unsigned int dims >
+constexpr auto sub_key( T left, T right ) {
+  T temp;
+  set_depth< T, dims >( temp, 0u );
+  for( unsigned int i = 0u; i != dims; ++i ) {
+    set_component< T, dims >( i, temp, get_component< T, dims >( i, left ) - get_component< T, dims >( i, right ) );
+  }
+  return temp;
+}
 
 template< unsigned int dims >
 constexpr void to_axis_camap( typename camap_traits< dims >::type&, unsigned int, unsigned int ) {}
@@ -457,6 +475,9 @@ constexpr auto combine_camap_and_count( typename camap_traits< dims >::type cama
     ( ( count & get_count_mask< dims >() ) << get_count_offset< dims >() ) |
     ( count & get_camap_mask< dims >() );
 }
+
+template< KeyType T, unsigned int dims >
+constexpr auto get_key_in_depth( T new_depth, T v );
 
 template< KeyType T, unsigned int dims >
 constexpr auto contains( const T &left, const T &key ) {
@@ -1305,6 +1326,10 @@ struct covering_rectangle {
 template< typename T >
 using covering_rectangle_t = typename covering_rectangle< T >::type;
 
+template< std::unsigned_integral T, unsigned int dims >
+auto get_right_bottom(
+  T key
+);
 
 template< std::ranges::range Range, typename F >
 auto is_uniform_of(
@@ -2154,7 +2179,7 @@ public:
   auto find(
     const rect_type &range,
     std::vector< value_type > &dest
-  ) {
+  ) const {
     C affected;
     detail::copy( map, range, affected, equal_to, false );
     detail::convert_to_rectangle_regions( affected, range, dest, equal_to );
@@ -2175,8 +2200,8 @@ public:
   void clear() {
     map.clear();
   }
-  void empty() const {
-    map.empty();
+  bool empty() const {
+    return map.empty();
   }
   const C &nodes() const {
     return map;
@@ -2192,10 +2217,34 @@ public:
     }
     return sum;
   }
+  auto hash_function() const {
+    return map.hash_function();
+  }
+  auto key_eq() const {
+    return map.key_eq();
+  }
+  EqualTo value_eq() const {
+    return equal_to;
+  }
 private:
   EqualTo equal_to;
-  C map;
+  mutable C map;
 };
+
+template< typename T >
+struct is_hdmap : public std::false_type {};
+template<
+  std::unsigned_integral T,
+  typename U,
+  unsigned int dims,
+  std::regular_invocable< const U&, const U& > EqualTo,
+  HDMapUnderlyingContainer C
+>
+struct is_hdmap< hdmap< T, U, dims, EqualTo, C > > : public std::true_type {};
+template< typename T >
+constexpr bool is_hdmap_v = is_hdmap< T >::value;
+template< typename T >
+concept HDMap = is_hdmap_v< std::remove_cvref_t< T > >;
 
 }
 #endif
