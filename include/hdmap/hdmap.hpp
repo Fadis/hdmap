@@ -1619,15 +1619,17 @@ auto copy(
           }
           depth_log_t< T, dims > new_log;
           auto node = find_nearest( from, root_key, key, new_log );
-          if( node->second.is_leaf() ) {
-            if( contains< T, dims >( node->second.get_range(), key ) ) {
-              if( trim )
-                insert( to, U( node->second.get_data() ), key, func );
-              else 
-                insert( to, U( node->second.get_data() ), node->second.get_range(), func );
-              log.erase( std::next( log.begin(), log_pos ), log.end() );
-              log.insert( log.end(), new_log.begin(), new_log.end() );
-              cached_node = node;
+          if( node != from.end() ) {
+            if( node->second.is_leaf() ) {
+              if( contains< T, dims >( node->second.get_range(), key ) ) {
+                if( trim )
+                  insert( to, U( node->second.get_data() ), key, func );
+                else 
+                  insert( to, U( node->second.get_data() ), node->second.get_range(), func );
+                log.erase( std::next( log.begin(), log_pos ), log.end() );
+                log.insert( log.end(), new_log.begin(), new_log.end() );
+                cached_node = node;
+              }
             }
           }
         }
@@ -1635,14 +1637,16 @@ auto copy(
       else {
         depth_log_t< T, dims > new_log;
         auto node = find_nearest( from, get_root_key< T, dims >(), key, new_log );
-        if( node->second.is_leaf() ) {
-          if( contains< T, dims >( node->second.get_range(), key ) ) {
-            if( trim )
-              insert( to, U( node->second.get_data() ), key, func );
-            else
-              insert( to, U( node->second.get_data() ), node->second.get_range(), func );
-            log = std::move( new_log );
-            cached_node = node;
+        if( node != from.end() ) {
+          if( node->second.is_leaf() ) {
+            if( contains< T, dims >( node->second.get_range(), key ) ) {
+              if( trim )
+                insert( to, U( node->second.get_data() ), key, func );
+              else
+                insert( to, U( node->second.get_data() ), node->second.get_range(), func );
+              log = std::move( new_log );
+              cached_node = node;
+            }
           }
         }
       }
